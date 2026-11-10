@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>200g</title>
+<meta name="theme-color" content="#1A1A1A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="200g">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+  html, body { margin: 0; height: 100%; background: #1A1A1A; overflow: hidden; }
+  #app { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; background: #F3F4F2; }
+  #carga { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+           gap: 18px; background: #1A1A1A; color: #BDBDBD; font: 15px system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+           transition: opacity .3s; z-index: 2; text-align: center; padding: 24px; }
+  #carga img { width: 132px; height: 132px; border-radius: 50%; }
+  #carga.oculto { opacity: 0; pointer-events: none; }
+  #carga button { display: none; margin-top: 6px; padding: 12px 22px; border: 0; border-radius: 12px;
+                  background: #2AA36A; color: #fff; font: inherit; font-weight: 700; }
+</style>
+</head>
+<body>
+<div id="carga">
+  <img src="icon-192.png" alt="200g">
+  <div id="msg">Abriendo…</div>
+  <button type="button" id="reintentar">Reintentar</button>
+</div>
+<iframe id="app" title="200g" allow="clipboard-write"></iframe>
+<script>
+  // Link de la app (Apps Script). Si cambia la implementación, solo se cambia esta línea.
+  var APP_URL = 'https://script.google.com/macros/s/AKfycbxgTxELaYODUw6LaqZWGROG-aZyvTT0ITCPWDt_fIHdXk4kWGtzPfAUAIe4arPsAT7b/exec';
+
+  var frame = document.getElementById('app');
+  var carga = document.getElementById('carga');
+  var msg = document.getElementById('msg');
+  var btn = document.getElementById('reintentar');
+  var modo = new URLSearchParams(location.search).get('modo');
+  var timer;
+
+  function abrir() {
+    carga.classList.remove('oculto');
+    btn.style.display = 'none';
+    if (!navigator.onLine) { msg.textContent = 'Sin internet. Conéctate y toca Reintentar.'; btn.style.display = 'inline-block'; return; }
+    msg.textContent = 'Abriendo…';
+    frame.src = APP_URL + (modo ? '?modo=' + encodeURIComponent(modo) : '');
+    clearTimeout(timer);
+    timer = setTimeout(function () {
+      msg.textContent = 'Está tardando más de lo normal. Revisa tu internet.';
+      btn.style.display = 'inline-block';
+    }, 20000);
+  }
+  frame.addEventListener('load', function () {
+    clearTimeout(timer);
+    setTimeout(function () { carga.classList.add('oculto'); }, 600);
+  });
+  btn.addEventListener('click', abrir);
+  window.addEventListener('online', function () { if (!carga.classList.contains('oculto')) abrir(); });
+  abrir();
+
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () {});
+</script>
+</body>
+</html>
